@@ -47,8 +47,8 @@
 
   /* two soft radial glows that meet under the title */
   background:
-    radial-gradient(1200px 420px at 50% 50%, rgba(36, 255, 164, 0.18), transparent 60%),
-    radial-gradient(900px 320px  at 50% 50%, rgba(59, 130, 246, 0.12), transparent 55%);
+    radial-gradient(1000px 360px at 50% 56%, rgba(36, 255, 164, 0.20), transparent 60%),
+    radial-gradient(720px 260px  at 50% 56%, rgba(59, 130, 246, 0.14), transparent 55%);
 
   /* fade the top/bottom so it never spills into other sections */
   -webkit-mask-image: linear-gradient(to bottom, transparent 0, black 10%, black 90%, transparent 100%);
@@ -65,8 +65,8 @@
 
   /* two soft radial highlights that meet under the title */
   background:
-    radial-gradient(1200px 420px at 50% 50%, rgba(54,255,164,0.18), transparent 60%),
-    radial-gradient(900px 320px  at 50% 50%, rgba(59,130,246,0.12), transparent 55%);
+    radial-gradient(1000px 360px at 50% 56%, rgba(54,255,164,0.20), transparent 60%),
+    radial-gradient(720px 260px  at 50% 56%, rgba(59,130,246,0.14), transparent 55%);
 
   /* softly fade the very top/bottom to transparent so it doesn't spill */
   -webkit-mask-image:
