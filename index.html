@@ -81,7 +81,7 @@
   <div class="hero-glow"></div>
   <canvas id="heroNet" class="hero-net" aria-hidden="true"></canvas>
 
-  <div class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32 text-center">
+  <div id="heroContent" class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32 text-center">
     <h1 class="text-4xl md:text-6xl font-extrabold mb-4">
       <eh-gtext>Eli Herman</eh-gtext>
     </h1>
@@ -265,6 +265,7 @@
   if (heroCanvas) {
     const ctx = heroCanvas.getContext('2d');
     const headerEl = heroCanvas.closest('header');
+    const heroContent = document.getElementById('heroContent');
     const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)');
     let nodes = [];
     let rafId = null;
@@ -275,18 +276,34 @@
     const mix = (a, b, t) => Math.round(a + (b - a) * t);
     const rgba = (rgb, a) => `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${a})`;
 
-    const resize = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const { width, height } = headerEl
+    const getBounds = () => {
+      const headerRect = headerEl
         ? headerEl.getBoundingClientRect()
         : heroCanvas.getBoundingClientRect();
+      const width = headerRect.width;
+      const height = headerRect.height;
+      let cx = width / 2;
+      let cy = height / 2;
+      if (heroContent) {
+        const contentRect = heroContent.getBoundingClientRect();
+        cx = contentRect.left - headerRect.left + contentRect.width / 2;
+        cy = contentRect.top - headerRect.top + contentRect.height / 2;
+      }
+      return { width, height, cx, cy, headerRect };
+    };
+
+    const resize = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const { width, height, cx, cy } = getBounds();
       heroCanvas.width = Math.max(1, Math.floor(width * dpr));
       heroCanvas.height = Math.max(1, Math.floor(height * dpr));
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
+      if (headerEl && height > 0) {
+        headerEl.style.setProperty('--hero-glow-y', `${(cy / height) * 100}%`);
+      }
+
       const count = Math.min(70, Math.max(36, Math.floor(width / 26)));
-      const cx = width / 2;
-      const cy = height / 2;
       const spreadX = Math.max(120, width * 0.2);
       const spreadY = Math.max(90, height * 0.2);
 
@@ -363,11 +380,7 @@
     };
 
     const step = () => {
-      const { width, height } = headerEl
-        ? headerEl.getBoundingClientRect()
-        : heroCanvas.getBoundingClientRect();
-      const cx = width / 2;
-      const cy = height / 2;
+      const { width, height, cx, cy } = getBounds();
       const pull = 0.00012;
       const maxSpeed = 0.35;
       for (const n of nodes) {
@@ -391,9 +404,7 @@
       cancelAnimationFrame(rafId);
       resize();
       if (prefersReduced.matches) {
-        const { width, height } = headerEl
-          ? headerEl.getBoundingClientRect()
-          : heroCanvas.getBoundingClientRect();
+        const { width, height } = getBounds();
         draw(width, height);
       } else {
         step();
