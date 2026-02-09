@@ -75,6 +75,16 @@
     linear-gradient(to bottom, transparent 0, black 10%, black 90%, transparent 100%);
 }
 
+/* Subtle canvas network behind hero text */
+.hero-net {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.7;
+  filter: blur(0.2px);
+}
+
 /* keep your gradient text looking crisp across extensions */
 .gtext {
   background-image: linear-gradient(to right, #34d399, #60a5fa);

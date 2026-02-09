@@ -79,8 +79,9 @@
 <header class="relative border-b border-gray-800 overflow-hidden">
   <!-- contained, masked gradient behind the hero -->
   <div class="hero-glow"></div>
+  <canvas id="heroNet" class="hero-net" aria-hidden="true"></canvas>
 
-  <div class="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32 text-center">
+  <div class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32 text-center">
     <h1 class="text-4xl md:text-6xl font-extrabold mb-4">
       <eh-gtext>Eli Herman</eh-gtext>
     </h1>
@@ -257,6 +258,109 @@
     window.addEventListener('scroll', toggleTopBtn, { passive: true });
     toggleTopBtn();
     topBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+  }
+
+  // Hero canvas network (subtle, responsive)
+  const heroCanvas = document.getElementById('heroNet');
+  if (heroCanvas) {
+    const ctx = heroCanvas.getContext('2d');
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let nodes = [];
+    let rafId = null;
+
+    const colorA = [52, 211, 153]; // #34d399
+    const colorB = [96, 165, 250]; // #60a5fa
+
+    const mix = (a, b, t) => Math.round(a + (b - a) * t);
+    const rgba = (rgb, a) => `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${a})`;
+
+    const resize = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const { width, height } = heroCanvas.getBoundingClientRect();
+      heroCanvas.width = Math.max(1, Math.floor(width * dpr));
+      heroCanvas.height = Math.max(1, Math.floor(height * dpr));
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      const count = Math.min(70, Math.max(36, Math.floor(width / 26)));
+      nodes = Array.from({ length: count }, () => ({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        vx: (Math.random() - 0.5) * 0.25,
+        vy: (Math.random() - 0.5) * 0.25
+      }));
+    };
+
+    const draw = (width, height) => {
+      ctx.clearRect(0, 0, width, height);
+
+      const maxDist = Math.min(220, Math.max(140, width * 0.18));
+      const maxDist2 = maxDist * maxDist;
+
+      for (let i = 0; i < nodes.length; i++) {
+        const n = nodes[i];
+        const t = Math.min(1, Math.max(0, n.x / width));
+        const rgb = [
+          mix(colorA[0], colorB[0], t),
+          mix(colorA[1], colorB[1], t),
+          mix(colorA[2], colorB[2], t)
+        ];
+
+        ctx.fillStyle = rgba(rgb, 0.65);
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, 1.6, 0, Math.PI * 2);
+        ctx.fill();
+
+        for (let j = i + 1; j < nodes.length; j++) {
+          const m = nodes[j];
+          const dx = n.x - m.x;
+          const dy = n.y - m.y;
+          const dist2 = dx * dx + dy * dy;
+          if (dist2 < maxDist2) {
+            const dist = Math.sqrt(dist2);
+            const alpha = (1 - dist / maxDist) * 0.35;
+            const tx = Math.min(1, Math.max(0, (n.x + m.x) / (2 * width)));
+            const lineRgb = [
+              mix(colorA[0], colorB[0], tx),
+              mix(colorA[1], colorB[1], tx),
+              mix(colorA[2], colorB[2], tx)
+            ];
+            ctx.strokeStyle = rgba(lineRgb, alpha);
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(n.x, n.y);
+            ctx.lineTo(m.x, m.y);
+            ctx.stroke();
+          }
+        }
+      }
+    };
+
+    const step = () => {
+      const { width, height } = heroCanvas.getBoundingClientRect();
+      for (const n of nodes) {
+        n.x += n.vx;
+        n.y += n.vy;
+        if (n.x < 0 || n.x > width) n.vx *= -1;
+        if (n.y < 0 || n.y > height) n.vy *= -1;
+      }
+      draw(width, height);
+      rafId = requestAnimationFrame(step);
+    };
+
+    const start = () => {
+      cancelAnimationFrame(rafId);
+      resize();
+      if (prefersReduced.matches) {
+        const { width, height } = heroCanvas.getBoundingClientRect();
+        draw(width, height);
+      } else {
+        step();
+      }
+    };
+
+    prefersReduced.addEventListener?.('change', start);
+    window.addEventListener('resize', start, { passive: true });
+    start();
   }
   </script>
 </body>
