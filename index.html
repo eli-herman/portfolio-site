@@ -264,6 +264,7 @@
   const heroCanvas = document.getElementById('heroNet');
   if (heroCanvas) {
     const ctx = heroCanvas.getContext('2d');
+    const headerEl = heroCanvas.closest('header');
     const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)');
     let nodes = [];
     let rafId = null;
@@ -276,7 +277,9 @@
 
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const { width, height } = heroCanvas.getBoundingClientRect();
+      const { width, height } = headerEl
+        ? headerEl.getBoundingClientRect()
+        : heroCanvas.getBoundingClientRect();
       heroCanvas.width = Math.max(1, Math.floor(width * dpr));
       heroCanvas.height = Math.max(1, Math.floor(height * dpr));
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -336,7 +339,9 @@
     };
 
     const step = () => {
-      const { width, height } = heroCanvas.getBoundingClientRect();
+      const { width, height } = headerEl
+        ? headerEl.getBoundingClientRect()
+        : heroCanvas.getBoundingClientRect();
       for (const n of nodes) {
         n.x += n.vx;
         n.y += n.vy;
@@ -351,7 +356,9 @@
       cancelAnimationFrame(rafId);
       resize();
       if (prefersReduced.matches) {
-        const { width, height } = heroCanvas.getBoundingClientRect();
+        const { width, height } = headerEl
+          ? headerEl.getBoundingClientRect()
+          : heroCanvas.getBoundingClientRect();
         draw(width, height);
       } else {
         step();
