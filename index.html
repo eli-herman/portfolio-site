@@ -285,12 +285,36 @@
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
       const count = Math.min(70, Math.max(36, Math.floor(width / 26)));
-      nodes = Array.from({ length: count }, () => ({
-        x: Math.random() * width,
-        y: Math.random() * height,
-        vx: (Math.random() - 0.5) * 0.25,
-        vy: (Math.random() - 0.5) * 0.25
-      }));
+      const cx = width / 2;
+      const cy = height / 2;
+      const spreadX = Math.max(120, width * 0.2);
+      const spreadY = Math.max(90, height * 0.2);
+
+      const gaussian = () => {
+        let u = 0, v = 0;
+        while (u === 0) u = Math.random();
+        while (v === 0) v = Math.random();
+        return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+      };
+
+      const spawn = () => {
+        for (let i = 0; i < 8; i++) {
+          const x = cx + gaussian() * spreadX;
+          const y = cy + gaussian() * spreadY;
+          if (x >= 0 && x <= width && y >= 0 && y <= height) return { x, y };
+        }
+        return { x: Math.random() * width, y: Math.random() * height };
+      };
+
+      nodes = Array.from({ length: count }, () => {
+        const pos = spawn();
+        return {
+          x: pos.x,
+          y: pos.y,
+          vx: (Math.random() - 0.5) * 0.2,
+          vy: (Math.random() - 0.5) * 0.2
+        };
+      });
     };
 
     const draw = (width, height) => {
@@ -342,7 +366,18 @@
       const { width, height } = headerEl
         ? headerEl.getBoundingClientRect()
         : heroCanvas.getBoundingClientRect();
+      const cx = width / 2;
+      const cy = height / 2;
+      const pull = 0.00012;
+      const maxSpeed = 0.35;
       for (const n of nodes) {
+        n.vx = (n.vx + (cx - n.x) * pull) * 0.992;
+        n.vy = (n.vy + (cy - n.y) * pull) * 0.992;
+        const speed = Math.hypot(n.vx, n.vy);
+        if (speed > maxSpeed) {
+          n.vx = (n.vx / speed) * maxSpeed;
+          n.vy = (n.vy / speed) * maxSpeed;
+        }
         n.x += n.vx;
         n.y += n.vy;
         if (n.x < 0 || n.x > width) n.vx *= -1;
